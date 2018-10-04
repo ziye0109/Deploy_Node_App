@@ -8,14 +8,15 @@ phases:
       - docker --version
   pre_build:
     commands:
-      - echo Installing dependencies.
+      - echo get ECR login
+      - $(aws ecr get-login --no-include-email --region us-east-2)
   build:
     commands:
       - echo Build docker images.
       - npm run docker:build
   post_build:
     commands:
-      - echo Send slack messages.
+      - upload to ECR
 artifacts:
   files:
     - "**/*"
