@@ -3,7 +3,6 @@ version: 0.2
 phases:
   install:
     commands:
-      - echo Installing testing tool.
       - node --version
       - docker --version
   pre_build:

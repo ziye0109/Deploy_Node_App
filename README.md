@@ -16,3 +16,11 @@ These instructions will get you a copy of the project up and running on your loc
 6. Codebuild: Run test and build docker images.
 7. ECR: Upload images into ECR.
 8. ECS: Deploy docker conainter.
+
+
+### Parameters need to configure
+
+1. AWS info.
+1. Github info.
+2. Slack webhook url.
+3. ECR info.
