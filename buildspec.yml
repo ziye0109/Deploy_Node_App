@@ -9,7 +9,7 @@ phases:
   pre_build:
     commands:
       - echo get ECR login
-      - $(aws ecr get-login --no-include-email --region us-east-2)
+      #- $(aws ecr get-login --no-include-email --region us-east-2)
   build:
     commands:
       - echo Build docker image.
