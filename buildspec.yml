@@ -12,11 +12,14 @@ phases:
       - $(aws ecr get-login --no-include-email --region us-east-2)
   build:
     commands:
-      - echo Build docker images.
+      - echo Build docker image.
       - npm run docker:build
+      - echo Tag the docker image.
+      - docker tag node_app_image:latest 462109678048.dkr.ecr.us-east-2.amazonaws.com/node_app_image:latest
   post_build:
     commands:
       - echo upload image to ECR.
+      - docker push 462109678048.dkr.ecr.us-east-2.amazonaws.com/node_app_image:latest
 artifacts:
   files:
     - "**/*"
