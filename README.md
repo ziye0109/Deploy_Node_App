@@ -1,4 +1,4 @@
-# CI/CD aws pipeline
+# CI/CD pipeline for node app
 
 Deploy node js app by using aws pipeline and aws ecs.
 
