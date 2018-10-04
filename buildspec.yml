@@ -4,6 +4,7 @@ phases:
   install:
     commands:
       - echo Installing testing tool.
+      - node --version
       - docker --version
   pre_build:
     commands:
@@ -11,6 +12,7 @@ phases:
   build:
     commands:
       - echo Build docker images.
+      - docker build -t node_app_image .
   post_build:
     commands:
       - echo Send slack messages.
