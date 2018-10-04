@@ -6,7 +6,7 @@ AWS Resources need for pipeline:
 3. Lambda: Call slack API send message to slack channel.
 4. Pipeline : orchestrate CI/CD workflow.
 5. Codebuild: run test and build docker images.
-6. ECS: run docker conainter on ECS.
+6. ECS: run docker conainter.
 
 
 
