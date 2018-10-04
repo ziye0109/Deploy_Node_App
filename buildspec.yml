@@ -4,16 +4,16 @@ phases:
   install:
     commands:
       - echo Installing testing tool.
+      - docker --version
   pre_build:
     commands:
       - echo Installing dependencies.
   build:
     commands:
       - echo Build docker images.
-      - npm run docker:build
   post_build:
     commands:
       - echo Send slack messages.
 artifacts:
   files:
-  - '**/*'
+    - "**/*"
