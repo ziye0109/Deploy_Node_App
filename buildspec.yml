@@ -16,7 +16,7 @@ phases:
       - npm run docker:build
   post_build:
     commands:
-      - echo upload to ECR
+      - echo upload image to ECR.
 artifacts:
   files:
     - "**/*"
