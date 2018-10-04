@@ -8,6 +8,11 @@
   "scripts": {
     "start": "node server.js",
     "docker:build": "docker build -t node_app_image .",
-    "docker:run":"docker run -p 8081:3000 node_app_image"
+    "docker:run": "docker run -p 8081:8081 node_app_image"
+  },
+  "define_scripts": {
+    "start": "start the node server",
+    "docker:build": "build docker images via dockerfile",
+    "docker:run": "run docker container"
   }
 }
