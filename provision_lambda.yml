@@ -1,0 +1,56 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  SlackWebhookUrl:
+    Type: String
+    Default: "https://hooks.slack.com/services/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"
+    Description: "slack webhook"
+  LambdaSourceCodeS3Bucket:
+    Type: String
+    Default: "my s3 bucket"
+
+Resources:
+  IamRoleLambdaExecution:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: "/"
+
+IamPolicyLambdaExecution:
+  Type: AWS::IAM::Policy
+  DependsOn: IamRoleLambdaExecution
+  Properties:
+    PolicyName: IamPolicyLambdaExecution
+    PolicyDocument:
+      Version: "2012-10-17"
+      Statement:
+        - Effect: Allow
+          Action:
+            - logs:*
+          Resource: "*"
+    Roles:
+      - Ref: IamRoleLambdaExecution
+
+SlackFunction:
+  Type: AWS::Lambda::Function
+  Properties:
+    Handler: slack.handler
+    Timeout: 5
+    Role:
+      Fn::GetAtt:
+        - IamRoleLambdaExecution
+        - Arn
+    Code:
+      S3Bucket: !ref LambdaSourceCodeS3Bucket
+      S3Key: "slack.js.zip"
+    Runtime: nodejs6.10
+    Environment:
+      Variables:
+        SLACK_HOOK_URL: !ref SlackWebhookUrl
