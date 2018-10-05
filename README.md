@@ -24,3 +24,8 @@ These instructions will get you a copy of the project up and running on your loc
 1. Github info.
 2. Slack webhook url.
 3. ECR info.
+
+
+### Notes
+
+1. Security group need to allow tcp to access contianer app.
