@@ -15,6 +15,7 @@ Parameters:
     Description: "Github personal access token"
   
 Resources:
+
   CodePipeline:
     Type: 'AWS::CodePipeline::Pipeline'
     Properties:
@@ -59,6 +60,76 @@ Resources:
                   Name: MyAppBuild
               Configuration:
                 ProjectName: !Ref CodeBuild
+
+  CodeBuild:
+    Type: 'AWS::CodeBuild::Project'
+    Properties:
+      Name: !Sub ${AWS::StackName}-CodeBuild
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+        Name: MyProject
+      Source: 
+        Type: CODEPIPELINE
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Type: LINUX_CONTAINER
+        Image: "aws/codebuild/nodejs:8.11.0"
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: !Sub |
+          version: 0.1
+          phases:
+            pre_build:
+              commands:
+                - echo Installing source NPM dependencies...
+            build:
+              commands:
+                - echo Building docker images
+            post_build:
+              commands:
+                - echo Send slack messages
+                - echo Deploy to ecs 
+          artifacts:
+            files:
+              - '**/*'
+            base-directory: build
+
+  CodePipeLineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - 
+            Effect: Allow
+            Principal:
+              Service:
+                - "codepipeline.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement: 
+              - 
+                Effect: Allow
+                Action:
+                  - "s3:GetObject"
+                  - "s3:GetObjectVersion"
+                  - "s3:GetBucketVersioning"
+                  - "s3:PutObject"
+                Resource: 
+                  - !GetAtt PipelineBucket.Arn
+                  - !Join ['', [!GetAtt PipelineBucket.Arn, "/*"]]
+              - 
+                Effect: Allow  
+                Action:
+                  - "codebuild:BatchGetBuilds"
+                  - "codebuild:StartBuild"
+                Resource: "*"
+                
   CodeBuildRole:
     Type: AWS::IAM::Role
     Properties:
@@ -97,73 +168,7 @@ Resources:
                   - "cloudfront:CreateInvalidation"
                 Resource:
                   - "*"
-  CodePipeLineRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - 
-            Effect: Allow
-            Principal:
-              Service:
-                - "codepipeline.amazonaws.com"
-            Action:
-              - "sts:AssumeRole"
-      Policies:
-        - PolicyName: root
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement: 
-              - 
-                Effect: Allow
-                Action:
-                  - "s3:GetObject"
-                  - "s3:GetObjectVersion"
-                  - "s3:GetBucketVersioning"
-                  - "s3:PutObject"
-                Resource: 
-                  - !GetAtt PipelineBucket.Arn
-                  - !Join ['', [!GetAtt PipelineBucket.Arn, "/*"]]
-              - 
-                Effect: Allow  
-                Action:
-                  - "codebuild:BatchGetBuilds"
-                  - "codebuild:StartBuild"
-                Resource: "*"
-  CodeBuild:
-    Type: 'AWS::CodeBuild::Project'
-    Properties:
-      Name: !Sub ${AWS::StackName}-CodeBuild
-      ServiceRole: !GetAtt CodeBuildRole.Arn
-      Artifacts:
-        Type: CODEPIPELINE
-        Name: MyProject
-      Source: 
-        Type: CODEPIPELINE
-      Environment:
-        ComputeType: BUILD_GENERAL1_SMALL
-        Type: LINUX_CONTAINER
-        Image: "aws/codebuild/nodejs:8.11.0"
-      Source:
-        Type: CODEPIPELINE
-        BuildSpec: !Sub |
-          version: 0.1
-          phases:
-            pre_build:
-              commands:
-                - echo Installing source NPM dependencies...
-            build:
-              commands:
-                - echo Building docker images
-            post_build:
-              commands:
-                - echo Send slack messages
-                - echo Deploy to ecs 
-          artifacts:
-            files:
-              - '**/*'
-            base-directory: build
+  
   PipelineBucket: 
     Type: 'AWS::S3::Bucket'
     Properties: {}
