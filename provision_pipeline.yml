@@ -7,7 +7,7 @@ Parameters:
   #Github Info
   GithubOwner:
     Type: String
-    Default: "Ziye"
+    Default: "ziye0109"
   GithubRepo:
     Type: String
     Default: Deploy_Node_App
