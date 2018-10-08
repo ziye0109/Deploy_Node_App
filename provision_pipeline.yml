@@ -24,14 +24,6 @@ Parameters:
     Type: String
     Default: "aws/codebuild/nodejs:10.1.0"
     Description: "CodeBuild image"
-  AwsAccountId:
-    Type: String
-    Default: "AWS_ACCOUNT_ID"
-    Description: "aws account Id"
-  ImageRepoName:
-    Type: String
-    Default: "IMAGE_REPO_NAME"
-    Description: "ECR repo name"
 
 Resources:
   #Store Pipeline Artifacts
@@ -94,14 +86,7 @@ Resources:
         Type: LINUX_CONTAINER
         Image: !Ref CodeBuildImage
         PrivilegedMode: true
-      EnvironmentVariables:
-        - name: AWS_ACCOUNT_ID
-          value: !Ref AwsAccountId
-          type: String
-        - name: IMAGE_REPO_NAME
-          value: !Ref ImageRepoName
-          type: String
-
+     
   #CodePipeline Role
   CodePipeLineRole:
     Type: AWS::IAM::Role
