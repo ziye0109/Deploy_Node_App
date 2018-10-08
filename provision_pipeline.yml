@@ -1,108 +1,115 @@
 AWSTemplateFormatVersion: 2010-09-09
-Parameters: 
-  ProjectSource: 
+Parameters:
+  ProjectSource:
     Type: String
     Default: "https://github.com/ziye0109/Deploy_Node_App"
-    Description: "node app"
+    Description: "Setup node server CI/CD pipeline"
+  #Github Info
   GithubOwner:
     Type: String
-    Default: ziye
+    Default: "Ziye"
   GithubRepo:
     Type: String
     Default: Deploy_Node_App
   GithubOAuthToken:
     Type: String
-    Description: "Github personal access token"
-  
-Resources:
+    Default: "450e46f4d98ecca2773213318123561ec9307587"
+    Description: "Ziye personal github access token"
+  #CodeBuild Info
+  CodeBuildComputeType:
+    Type: String
+    Default: "BUILD_GENERAL1_SMALL"
+    Description: "CodeBuild compute type"
+  CodeBuildImage:
+    Type: String
+    Default: "aws/codebuild/nodejs:10.1.0"
+    Description: "CodeBuild image"
+  AwsAccountId:
+    Type: String
+    Default: "AWS_ACCOUNT_ID"
+    Description: "aws account Id"
+  ImageRepoName:
+    Type: String
+    Default: "IMAGE_REPO_NAME"
+    Description: "ECR repo name"
 
+Resources:
+  #Store Pipeline Artifacts
+  PipelineBucket:
+    Type: "AWS::S3::Bucket"
+    Properties: {}
+
+  #Pipeline Resource
   CodePipeline:
-    Type: 'AWS::CodePipeline::Pipeline'
+    Type: "AWS::CodePipeline::Pipeline"
     Properties:
       RoleArn: !GetAtt CodePipeLineRole.Arn
       ArtifactStore:
         Location: !Ref PipelineBucket
         Type: S3
       Stages:
-        - 
-          Name: Source
-          Actions: 
-            - 
-              Name: SourceAction
-              ActionTypeId: 
-                Category: Source
-                Owner: ThirdParty
+        - Name: Source
+          Actions:
+            - Name: SourceAction
+              ActionTypeId:
+                Category: Source #Source | Build | Deploy | Test | Invoke | Approval
+                Owner: ThirdParty #AWS | ThirdParty | Custom
                 Provider: GitHub
                 Version: 1
-              OutputArtifacts: 
-                - 
-                  Name: MyApp
+              OutputArtifacts:
+                - Name: artifactsFromSource
               Configuration:
                 Owner: !Ref GithubOwner
                 Repo: !Ref GithubRepo
                 Branch: master
                 OAuthToken: !Ref GithubOAuthToken
-        - 
-          Name: Build
-          Actions: 
-            - 
-              Name: BuildAction
-              ActionTypeId: 
+        - Name: Build
+          Actions:
+            - Name: BuildAction
+              ActionTypeId:
                 Category: Build
                 Owner: AWS
                 Version: 1
                 Provider: CodeBuild
-              InputArtifacts: 
-                - 
-                  Name: MyApp
-              OutputArtifacts: 
-                - 
-                  Name: MyAppBuild
+              InputArtifacts:
+                - Name: artifactsFromSource
+              OutputArtifacts:
+                - Name: artifactsFromBuild
               Configuration:
                 ProjectName: !Ref CodeBuild
 
+  #CodeBuild Resource
   CodeBuild:
-    Type: 'AWS::CodeBuild::Project'
+    Type: "AWS::CodeBuild::Project"
     Properties:
       Name: !Sub ${AWS::StackName}-CodeBuild
       ServiceRole: !GetAtt CodeBuildRole.Arn
       Artifacts:
-        Type: CODEPIPELINE
+        Type: CODEPIPELINE #NO_ARTIFACTS | CODEPIPELINE |S3
         Name: MyProject
-      Source: 
-        Type: CODEPIPELINE
-      Environment:
-        ComputeType: BUILD_GENERAL1_SMALL
-        Type: LINUX_CONTAINER
-        Image: "aws/codebuild/nodejs:8.11.0"
       Source:
         Type: CODEPIPELINE
-        BuildSpec: !Sub |
-          version: 0.1
-          phases:
-            pre_build:
-              commands:
-                - echo Installing source NPM dependencies...
-            build:
-              commands:
-                - echo Building docker images
-            post_build:
-              commands:
-                - echo Send slack messages
-                - echo Deploy to ecs 
-          artifacts:
-            files:
-              - '**/*'
-            base-directory: build
+      Environment:
+        ComputeType: !Ref CodeBuildComputeType
+        Type: LINUX_CONTAINER
+        Image: !Ref CodeBuildImage
+        PrivilegedMode: true
+      EnvironmentVariables:
+        - name: AWS_ACCOUNT_ID
+          value: !Ref AwsAccountId
+          type: String
+        - name: IMAGE_REPO_NAME
+          value: !Ref ImageRepoName
+          type: String
 
+  #CodePipeline Role
   CodePipeLineRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - 
-            Effect: Allow
+          - Effect: Allow
             Principal:
               Service:
                 - "codepipeline.amazonaws.com"
@@ -112,32 +119,43 @@ Resources:
         - PolicyName: root
           PolicyDocument:
             Version: "2012-10-17"
-            Statement: 
-              - 
-                Effect: Allow
+            Statement:
+              #Policy for artifacts
+              - Effect: Allow
                 Action:
                   - "s3:GetObject"
                   - "s3:GetObjectVersion"
                   - "s3:GetBucketVersioning"
                   - "s3:PutObject"
-                Resource: 
+                Resource:
                   - !GetAtt PipelineBucket.Arn
-                  - !Join ['', [!GetAtt PipelineBucket.Arn, "/*"]]
-              - 
-                Effect: Allow  
+                  - !Join ["", [!GetAtt PipelineBucket.Arn, "/*"]]
+              #Policy for CodeBuild
+              - Effect: Allow
                 Action:
                   - "codebuild:BatchGetBuilds"
                   - "codebuild:StartBuild"
                 Resource: "*"
-                
+
+              #Policy for ECS deployment
+              - Effect: Allow
+                Action:
+                  - "ecs:DescribeServices"
+                  - "ecs:DescribeTaskDefinition"
+                  - "ecs:DescribeTasks"
+                  - "ecs:ListTasks"
+                  - "ecs:RegisterTaskDefinition"
+                  - "ecs:UpdateService"
+                Resource: "*"
+
+  #CodeBuild Role
   CodeBuildRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - 
-            Effect: Allow
+          - Effect: Allow
             Principal:
               Service:
                 - "codebuild.amazonaws.com"
@@ -148,19 +166,17 @@ Resources:
         - PolicyName: root
           PolicyDocument:
             Version: "2012-10-17"
-            Statement: 
-              - 
-                Effect: Allow
+            Statement:
+              - Effect: Allow
                 Action:
                   - "s3:GetObject"
                   - "s3:GetObjectVersion"
                   - "s3:GetBucketVersioning"
                   - "s3:PutObject"
-                Resource: 
+                Resource:
                   - !GetAtt PipelineBucket.Arn
-                  - !Join ['', [!GetAtt PipelineBucket.Arn, "/*"]]
-              -
-                Effect: Allow
+                  - !Join ["", [!GetAtt PipelineBucket.Arn, "/*"]]
+              - Effect: Allow
                 Action:
                   - "logs:CreateLogGroup"
                   - "logs:CreateLogStream"
@@ -168,8 +184,3 @@ Resources:
                   - "cloudfront:CreateInvalidation"
                 Resource:
                   - "*"
-  
-  PipelineBucket: 
-    Type: 'AWS::S3::Bucket'
-    Properties: {}
-  

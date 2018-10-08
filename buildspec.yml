@@ -3,22 +3,26 @@ version: 0.2
 phases:
   install:
     commands:
+      - echo Checking node and docker exist on codebuild. Use for debuging.
       - node --version
       - docker --version
   pre_build:
     commands:
       - echo get ECR login
       - $(aws ecr get-login --no-include-email --region us-east-2)
+      - IMAGE_TAG= $(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_URI= "462109678048.dkr.ecr.us-east-2.amazonaws.com/node_app_image:latest"
+      # - IMAGE_URI="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG"
   build:
     commands:
       - echo Build docker image.
       - npm run docker:build
       - echo Tag the docker image.
-      - docker tag node_app_image:latest 462109678048.dkr.ecr.us-east-2.amazonaws.com/node_app_image:latest
+      - docker tag node_app_image:latest $IMAGE_URI
   post_build:
     commands:
-      - echo upload image to ECR.
-      - docker push 462109678048.dkr.ecr.us-east-2.amazonaws.com/node_app_image:latest
+      - echo Push image to ECR.
+      - docker push $IMAGE_URI
+      - printf '[{"name":"node_server","imageUri":"%s"}]' "$IMAGE_URI" > images.json
 artifacts:
-  files:
-    - "**/*"
+  files: images.json

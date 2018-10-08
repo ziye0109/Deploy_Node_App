@@ -3,12 +3,66 @@ Parameters:
   SlackWebhookUrl:
     Type: String
     Default: "https://hooks.slack.com/services/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"
-    Description: "slack webhook"
+    Description: "Slack webhook"
+  LambdaRuntime:
+    Type: String
+    Default: "nodejs8.10"
+    Description: "Lambda node version"
   LambdaSourceCodeS3Bucket:
     Type: String
-    Default: "my s3 bucket"
+    Default: "S3 bucket to store the source code"
 
 Resources:
+  # CloudWatch Event to trigger lambda for build slack notifications
+  BuildEventRule:
+  Type: 'AWS::Events::Rule'
+  Properties:
+    Description: 'BuildEventRule'
+    EventPattern:
+      source:
+        - 'aws.codebuild'
+      detail-type:
+        - 'CodeBuild Build State Change'
+      detail:
+        build-status:
+          - 'IN_PROGRESS'
+          - 'SUCCEEDED'
+          - 'FAILED'
+          - 'STOPPED'
+    State: 'ENABLED'
+    Targets:
+      -
+        Arn: !GetAtt SlackLambda.Arn
+        Id: 'BuildRuleLambdaTarget'
+
+  # Permission for CloudWatch to invoke our Lambda
+  PermissionForBuildEventsToInvokeLambda:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      FunctionName: !Ref SlackLambda
+      Action: 'lambda:InvokeFunction'
+      Principal: 'events.amazonaws.com'
+      SourceArn: !GetAtt BuildEventRule.Arn
+
+  # Lambda Resource
+  SlackLambda:
+  Type: AWS::Lambda::Function
+  Properties:
+    Handler: slack.handler
+    Timeout: 5
+    Role:
+      Fn::GetAtt:
+        - IamRoleLambdaExecution
+        - Arn
+    Code:
+      S3Bucket: !ref LambdaSourceCodeS3Bucket
+      S3Key: "slack.js.zip"
+    Runtime: nodejs8.10
+    Environment:
+      Variables:
+        SLACK_HOOK_URL: !ref SlackWebhookUrl
+  
+  # Lambada Role
   IamRoleLambdaExecution:
     Type: AWS::IAM::Role
     Properties:
@@ -23,7 +77,7 @@ Resources:
               - sts:AssumeRole
       Path: "/"
 
-IamPolicyLambdaExecution:
+  IamPolicyLambdaExecution:
   Type: AWS::IAM::Policy
   DependsOn: IamRoleLambdaExecution
   Properties:
@@ -38,19 +92,4 @@ IamPolicyLambdaExecution:
     Roles:
       - Ref: IamRoleLambdaExecution
 
-SlackFunction:
-  Type: AWS::Lambda::Function
-  Properties:
-    Handler: slack.handler
-    Timeout: 5
-    Role:
-      Fn::GetAtt:
-        - IamRoleLambdaExecution
-        - Arn
-    Code:
-      S3Bucket: !ref LambdaSourceCodeS3Bucket
-      S3Key: "slack.js.zip"
-    Runtime: nodejs6.10
-    Environment:
-      Variables:
-        SLACK_HOOK_URL: !ref SlackWebhookUrl
+
