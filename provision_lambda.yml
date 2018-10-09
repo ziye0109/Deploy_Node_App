@@ -10,69 +10,30 @@ Parameters:
     Description: "Lambda node version"
   LambdaSourceCodeS3Bucket:
     Type: String
-    Default: "S3 bucket to store the source code"
+    Default: "slack-notification-lambda-bucket"
     Description: "Save lambda in S3, right now use inline"
-
+  LambdaSourceCodeS3Key:
+    Type: String
+    Default: "slack.js.zip"
+    Description: "slack_notification.js file name as key"
 Resources:
-
-  # Lambda Resource
+  # S3 Bucket for Lambda Source Code
+  # Slack Lambda
   SlackLambda:
-  Type: AWS::Lambda::Function
-  Properties:
-    Handler: index.handler
-    Timeout: 5
-    Role:
-      Fn::GetAtt:
-        - IamRoleLambdaExecution
-        - Arn
-    Code:
-      ZipFile: >
-
-const url = require('url');
-const https = require('https');
-const util = require('util');
-
-const POST_OPTIONS = {
-    hostname: 'hooks.slack.com',
-    path: 'https://hooks.slack.com/services/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',
-    method: 'POST',
-  };
-
-exports.handler = (event, context, callback) => {
-    
-    console.log(JSON.stringify(event));
-    const stage = 'Code Build';
-    const state = event.detail['build-status'];
-    const title = stage +' '+state;
-    
-    const message = {
-        channel: 'general',
-        attachments: [
-        {
-            "color": state.toLowerCase()==='failed'?"#ff6347":"#36a64f",
-            "pretext": state,
-            "author_name": "ziye",
-            "title": title,
-            "title_link": "https://api.slack.com/",
-            "text": state,
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: slack.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: !Ref LambdaSourceCodeS3Bucket
+        S3Key: !Ref LambdaSourceCodeS3Key
+      Runtime: "nodejs8.10"
+      Environment:
+        Variables:
+          SLACK_HOOK_URL: !Ref SlackWebhookUrl
           
-        }
-    ]};
-    const r = https.request(POST_OPTIONS, (res)=> {
-                        res.setEncoding('utf8');
-                        res.on('data',  (data) => context.succeed("Message Sent: " + data));
-    }).on("error", e =>context.fail("Failed: " + e));
-    r.write(util.format("%j", message));
-    r.end();
-};    
-
-    Runtime: nodejs8.10
-    Environment:
-      Variables:
-        SLACK_HOOK_URL: !ref SlackWebhookUrl
-  
-  # Lambda Role
-  IamRoleLambdaExecution:
+  # Slack Lambda Role
+  LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -85,44 +46,37 @@ exports.handler = (event, context, callback) => {
             Action:
               - sts:AssumeRole
       Path: "/"
-  # Lambda Policy
-  IamPolicyLambdaExecution:
-  Type: AWS::IAM::Policy
-  DependsOn: IamRoleLambdaExecution
-  Properties:
-    PolicyName: IamPolicyLambdaExecution
-    PolicyDocument:
-      Version: "2012-10-17"
-      Statement:
-        - Effect: Allow
-          Action:
-            - logs:*
-          Resource: "*"
-    Roles:
-      - Ref: IamRoleLambdaExecution
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:*
+                Resource: arn:aws:logs:*:*:*
 
-
-  # CloudWatch Event to trigger lambda for build slack notifications
+  # CloudWatch Event to trigger lambda for build slack notifications.
   BuildEventRule:
-  Type: 'AWS::Events::Rule'
-  Properties:
-    Description: 'BuildEventRule'
-    EventPattern:
-      source:
-        - 'aws.codebuild'
-      detail-type:
-        - 'CodeBuild Build State Change'
-      detail:
-        build-status:
-          - 'IN_PROGRESS'
-          - 'SUCCEEDED'
-          - 'FAILED'
-          - 'STOPPED'
-    State: 'ENABLED'
-    Targets:
-      -
-        Arn: !GetAtt SlackLambda.Arn
-        Id: 'BuildRuleLambdaTarget'
+    Type: 'AWS::Events::Rule'
+    Properties:
+      Description: 'BuildEventRule'
+      EventPattern:
+        source:
+          - 'aws.codebuild'
+        detail-type:
+          - 'CodeBuild Build State Change'
+        detail:
+          build-status:
+            - 'IN_PROGRESS'
+            - 'SUCCEEDED'
+            - 'FAILED'
+            - 'STOPPED'
+      State: 'ENABLED'
+      Targets:
+        -
+          Arn: !GetAtt SlackLambda.Arn
+          Id: 'BuildRuleLambdaTarget'
 
   # Permission for CloudWatch to invoke our Lambda
   PermissionForBuildEventsToInvokeLambda:
@@ -132,5 +86,5 @@ exports.handler = (event, context, callback) => {
       Action: 'lambda:InvokeFunction'
       Principal: 'events.amazonaws.com'
       SourceArn: !GetAtt BuildEventRule.Arn
-
+        
 
