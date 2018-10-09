@@ -7,12 +7,12 @@ environment_variables:
 phases:
   install:
     commands:
-      - echo Checking node and docker exist on codebuild. Use for debuging.
+      - echo Checking node and docker exist on codebuild.
       - node --version
       - docker --version
   pre_build:
     commands:
-      - echo get ECR login
+      - echo login to ECR.
       - $(aws ecr get-login --no-include-email --region us-east-2)
       - IMAGE_TAG= $(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_URI= "462109678048.dkr.ecr.us-east-2.amazonaws.com/node_app_image:latest"

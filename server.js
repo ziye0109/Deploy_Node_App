@@ -1,5 +1,5 @@
 const http = require('http');
-console.log('node server started!');
+console.log('Node Server Started!');
 http.createServer(function (req, res) {
   res.write('Syncing data with CB at 8081'); 
   res.end(); 
