@@ -14,7 +14,7 @@ Parameters:
   GithubOAuthToken:
     NoEcho: true
     Type: String
-    Default: "f25e1ae24e58c9872795bc130f3dd8df0b54d417"
+    Default: "7b2b34202c4cfa0b68142f25d8992f02fe5f7d5e"
     Description: "Ziye personal github access token"
   #CodeBuild Info
   CodeBuildComputeType:
@@ -87,7 +87,7 @@ Resources:
         Type: LINUX_CONTAINER
         Image: !Ref CodeBuildImage
         PrivilegedMode: true
-     
+
   #CodePipeline Role
   CodePipeLineRole:
     Type: AWS::IAM::Role
@@ -112,7 +112,7 @@ Resources:
                   - "s3:GetObject"
                   - "s3:GetObjectVersion"
                   - "s3:GetBucketVersioning"
-                  - "s3:PutObject"                
+                  - "s3:PutObject"
                 Resource:
                   - !GetAtt PipelineBucket.Arn
                   - !Join ["", [!GetAtt PipelineBucket.Arn, "/*"]]
@@ -120,6 +120,17 @@ Resources:
               #Policy for Source
               - Effect: Allow
                 Action:
+                  - "elasticbeanstalk:*"
+                  - "ec2:*"
+                  - "elasticloadbalancing:*"
+                  - "autoscaling:*"
+                  - "cloudwatch:*"
+                  - "s3:*"
+                  - "sns:*"
+                  - "cloudformation:*"
+                  - "rds:*"
+                  - "sqs:*"
+                  - "ecs:*"
                   - "iam:PassRole"
                 Resource: "*"
 
