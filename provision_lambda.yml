@@ -1,9 +1,16 @@
 AWSTemplateFormatVersion: 2010-09-09
 Parameters:
+  #CodeBuild project name
+  CodeBuildProjectName:
+    Type: String
+    Default: "NodeServerPipeline-CodeBuild"
+    Description: "code build project name"
+  #Slack webhook url
   SlackWebhookUrl:
     Type: String
     Default: "https://hooks.slack.com/services/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"
     Description: "Slack webhook"
+  #Lambda Info
   LambdaRuntime:
     Type: String
     Default: "nodejs8.10"
@@ -58,33 +65,32 @@ Resources:
 
   # CloudWatch Event to trigger lambda call
   BuildEventRule:
-    Type: 'AWS::Events::Rule'
+    Type: "AWS::Events::Rule"
     Properties:
-      Description: 'BuildEventRule'
+      Description: "BuildEventRule"
       EventPattern:
         source:
-          - 'aws.codebuild'
+          - "aws.codebuild"
         detail-type:
-          - 'CodeBuild Build State Change'
+          - "CodeBuild Build State Change"
         detail:
+          project-name:
+            - !Ref CodeBuildProjectName
           build-status:
-            - 'IN_PROGRESS'
-            - 'SUCCEEDED'
-            - 'FAILED'
-            - 'STOPPED'
-      State: 'ENABLED'
+            - "IN_PROGRESS"
+            - "SUCCEEDED"
+            - "FAILED"
+            - "STOPPED"
+      State: "ENABLED"
       Targets:
-        -
-          Arn: !GetAtt SlackLambda.Arn
-          Id: 'BuildRuleLambdaTarget'
+        - Arn: !GetAtt SlackLambda.Arn
+          Id: "BuildRuleLambdaTarget"
 
   # Permission for CloudWatch to invoke Lambda
   PermissionForBuildEventsToInvokeLambda:
-    Type: 'AWS::Lambda::Permission'
+    Type: "AWS::Lambda::Permission"
     Properties:
       FunctionName: !Ref SlackLambda
-      Action: 'lambda:InvokeFunction'
-      Principal: 'events.amazonaws.com'
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
       SourceArn: !GetAtt BuildEventRule.Arn
-        
-

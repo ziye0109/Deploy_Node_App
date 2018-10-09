@@ -15,7 +15,7 @@ Parameters:
   GithubOAuthToken:
     NoEcho: true
     Type: String
-    Default: 7b2b34202c4cfa0b68142f25d8992f02fe5f7d5e
+    Default: 2b858d9ad6dbb18eb1366dc8a2538366857b4a56
     Description: "Ziye personal github access token"
   #CodeBuild Config
   CodeBuildComputeType:
