@@ -7,23 +7,23 @@ Parameters:
   #Github Info
   GithubOwner:
     Type: String
-    Default: "ziye0109"
+    Default: ziye0109
   GithubRepo:
     Type: String
     Default: Deploy_Node_App
   GithubOAuthToken:
     NoEcho: true
     Type: String
-    Default: "7b2b34202c4cfa0b68142f25d8992f02fe5f7d5e"
+    Default: 7b2b34202c4cfa0b68142f25d8992f02fe5f7d5e
     Description: "Ziye personal github access token"
   #CodeBuild Info
   CodeBuildComputeType:
     Type: String
-    Default: "BUILD_GENERAL1_SMALL"
+    Default: BUILD_GENERAL1_SMALL
     Description: "CodeBuild compute type"
   CodeBuildImage:
     Type: String
-    Default: "aws/codebuild/nodejs:10.1.0"
+    Default: aws/codebuild/nodejs:10.1.0
     Description: "CodeBuild image"
 
 Resources:
