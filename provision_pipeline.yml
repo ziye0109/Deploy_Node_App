@@ -12,8 +12,9 @@ Parameters:
     Type: String
     Default: Deploy_Node_App
   GithubOAuthToken:
+    NoEcho: true
     Type: String
-    Default: "450e46f4d98ecca2773213318123561ec9307587"
+    Default: "f25e1ae24e58c9872795bc130f3dd8df0b54d417"
     Description: "Ziye personal github access token"
   #CodeBuild Info
   CodeBuildComputeType:
@@ -111,10 +112,17 @@ Resources:
                   - "s3:GetObject"
                   - "s3:GetObjectVersion"
                   - "s3:GetBucketVersioning"
-                  - "s3:PutObject"
+                  - "s3:PutObject"                
                 Resource:
                   - !GetAtt PipelineBucket.Arn
                   - !Join ["", [!GetAtt PipelineBucket.Arn, "/*"]]
+
+              #Policy for Source
+              - Effect: Allow
+                Action:
+                  - "iam:PassRole"
+                Resource: "*"
+
               #Policy for CodeBuild
               - Effect: Allow
                 Action:
