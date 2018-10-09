@@ -14,7 +14,7 @@ phases:
     commands:
       - echo login to ECR.
       - $(aws ecr get-login --no-include-email --region us-east-2)
-      - IMAGE_TAG= $(CODEBUILD_BUILD_ID)
+      # - IMAGE_TAG= $(CODEBUILD_BUILD_ID)
       - IMAGE_URI= "462109678048.dkr.ecr.us-east-2.amazonaws.com/node_app_image:latest"
       # - IMAGE_URI="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG"
   build:
