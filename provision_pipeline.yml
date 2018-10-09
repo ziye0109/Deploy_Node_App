@@ -188,3 +188,8 @@ Resources:
                   - "cloudfront:CreateInvalidation"
                 Resource:
                   - "*"
+              - Effect: Allow
+                Action:
+                  - "ecr:*"
+                Resource:
+                  - "*"
