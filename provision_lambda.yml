@@ -11,8 +11,97 @@ Parameters:
   LambdaSourceCodeS3Bucket:
     Type: String
     Default: "S3 bucket to store the source code"
+    Description: "Save lambda in S3, right now use inline"
 
 Resources:
+
+  # Lambda Resource
+  SlackLambda:
+  Type: AWS::Lambda::Function
+  Properties:
+    Handler: index.handler
+    Timeout: 5
+    Role:
+      Fn::GetAtt:
+        - IamRoleLambdaExecution
+        - Arn
+    Code:
+      ZipFile: >
+
+const url = require('url');
+const https = require('https');
+const util = require('util');
+
+const POST_OPTIONS = {
+    hostname: 'hooks.slack.com',
+    path: 'https://hooks.slack.com/services/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',
+    method: 'POST',
+  };
+
+exports.handler = (event, context, callback) => {
+    
+    console.log(JSON.stringify(event));
+    const stage = 'Code Build';
+    const state = event.detail['build-status'];
+    const title = stage +' '+state;
+    
+    const message = {
+        channel: 'general',
+        attachments: [
+        {
+            "color": state.toLowerCase()==='failed'?"#ff6347":"#36a64f",
+            "pretext": state,
+            "author_name": "ziye",
+            "title": title,
+            "title_link": "https://api.slack.com/",
+            "text": state,
+          
+        }
+    ]};
+    const r = https.request(POST_OPTIONS, (res)=> {
+                        res.setEncoding('utf8');
+                        res.on('data',  (data) => context.succeed("Message Sent: " + data));
+    }).on("error", e =>context.fail("Failed: " + e));
+    r.write(util.format("%j", message));
+    r.end();
+};    
+
+    Runtime: nodejs8.10
+    Environment:
+      Variables:
+        SLACK_HOOK_URL: !ref SlackWebhookUrl
+  
+  # Lambda Role
+  IamRoleLambdaExecution:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: "/"
+  # Lambda Policy
+  IamPolicyLambdaExecution:
+  Type: AWS::IAM::Policy
+  DependsOn: IamRoleLambdaExecution
+  Properties:
+    PolicyName: IamPolicyLambdaExecution
+    PolicyDocument:
+      Version: "2012-10-17"
+      Statement:
+        - Effect: Allow
+          Action:
+            - logs:*
+          Resource: "*"
+    Roles:
+      - Ref: IamRoleLambdaExecution
+
+
   # CloudWatch Event to trigger lambda for build slack notifications
   BuildEventRule:
   Type: 'AWS::Events::Rule'
@@ -43,53 +132,5 @@ Resources:
       Action: 'lambda:InvokeFunction'
       Principal: 'events.amazonaws.com'
       SourceArn: !GetAtt BuildEventRule.Arn
-
-  # Lambda Resource
-  SlackLambda:
-  Type: AWS::Lambda::Function
-  Properties:
-    Handler: slack.handler
-    Timeout: 5
-    Role:
-      Fn::GetAtt:
-        - IamRoleLambdaExecution
-        - Arn
-    Code:
-      S3Bucket: !ref LambdaSourceCodeS3Bucket
-      S3Key: "slack.js.zip"
-    Runtime: nodejs8.10
-    Environment:
-      Variables:
-        SLACK_HOOK_URL: !ref SlackWebhookUrl
-  
-  # Lambada Role
-  IamRoleLambdaExecution:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      Path: "/"
-
-  IamPolicyLambdaExecution:
-  Type: AWS::IAM::Policy
-  DependsOn: IamRoleLambdaExecution
-  Properties:
-    PolicyName: IamPolicyLambdaExecution
-    PolicyDocument:
-      Version: "2012-10-17"
-      Statement:
-        - Effect: Allow
-          Action:
-            - logs:*
-          Resource: "*"
-    Roles:
-      - Ref: IamRoleLambdaExecution
 
 
