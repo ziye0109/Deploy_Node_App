@@ -1,7 +1,6 @@
 const http = require('http');
-
-console.log("syncing with engage server!");
+console.log('node server started!');
 http.createServer(function (req, res) {
-  res.write('Server is running in docker container at 8081'); 
+  res.write('Syncing data with CB at 8081'); 
   res.end(); 
 }).listen(8081); 
