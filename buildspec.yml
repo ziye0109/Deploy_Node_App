@@ -27,6 +27,6 @@ phases:
     commands:
       - echo Push image to ECR.
       - docker push $IMAGE_URI
-      - printf '[{"name":"node_server","imageUri":"%s"}]' "$IMAGE_URI" > images.json
+      - printf '[{"name":"node_server","imageUri":"%s"}]' "$IMAGE_URI" > imagedefinitions.json
 artifacts:
-  files: images.json
+  files: imagedefinitions.json

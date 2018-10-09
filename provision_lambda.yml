@@ -31,7 +31,7 @@ Resources:
       Environment:
         Variables:
           SLACK_HOOK_URL: !Ref SlackWebhookUrl
-          
+
   # Slack Lambda Role
   LambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -56,7 +56,7 @@ Resources:
                   - logs:*
                 Resource: arn:aws:logs:*:*:*
 
-  # CloudWatch Event to trigger lambda for build slack notifications.
+  # CloudWatch Event to trigger lambda call
   BuildEventRule:
     Type: 'AWS::Events::Rule'
     Properties:
@@ -78,7 +78,7 @@ Resources:
           Arn: !GetAtt SlackLambda.Arn
           Id: 'BuildRuleLambdaTarget'
 
-  # Permission for CloudWatch to invoke our Lambda
+  # Permission for CloudWatch to invoke Lambda
   PermissionForBuildEventsToInvokeLambda:
     Type: 'AWS::Lambda::Permission'
     Properties:
