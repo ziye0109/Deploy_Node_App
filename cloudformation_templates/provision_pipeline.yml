@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Parameters:
-  #Github Source 
+  #Github Source
   ProjectSource:
     Type: String
     Default: "https://github.com/ziye0109/Deploy_Node_App"
@@ -61,7 +61,7 @@ Resources:
               Configuration:
                 Owner: !Ref GithubOwner
                 Repo: !Ref GithubRepo
-                Branch: master
+                Branch: "master"
                 OAuthToken: !Ref GithubOAuthToken
         - Name: Build
           Actions:
@@ -91,7 +91,6 @@ Resources:
                 FileName: imagedefinitions.json
               InputArtifacts:
                 - Name: artifactsFromBuild
-
   #CodeBuild Resource
   CodeBuild:
     Type: "AWS::CodeBuild::Project"
