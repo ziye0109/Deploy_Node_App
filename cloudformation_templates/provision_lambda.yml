@@ -3,7 +3,7 @@ Parameters:
   #CodeBuild project name
   CodeBuildProjectName:
     Type: String
-    Default: "NodeServerPipeline-CodeBuildMaster"
+    Default: "NodeServerPipeline-CodeBuildDevelopment"
     Description: "code build project name"
   #Slack webhook url
   SlackWebhookUrl:
