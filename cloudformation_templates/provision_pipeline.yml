@@ -89,7 +89,7 @@ Resources:
               OutputArtifacts:
                 - Name: artifactsFromMasterBuild
               Configuration:
-                ProjectName: !Ref CodeBuild
+                ProjectName: !Ref CodeBuildMaster
             - Name: BuildDevelopment
               ActionTypeId:
                 Category: Build
@@ -101,7 +101,7 @@ Resources:
               OutputArtifacts:
                 - Name: artifactsFromDevelopmentBuild
               Configuration:
-                ProjectName: !Ref CodeBuild
+                ProjectName: !Ref CodeBuildDevelopment
         - Name: Deploy
           Actions:
             - Name: Deploy
@@ -116,8 +116,26 @@ Resources:
                 FileName: imagedefinitions.json
               InputArtifacts:
                 - Name: artifactsFromMasterBuild
-  #CodeBuild Resource
-  CodeBuild:
+
+  #CodeBuild Master Branch
+  CodeBuildMaster:
+    Type: "AWS::CodeBuild::Project"
+    Properties:
+      Name: !Sub ${AWS::StackName}-CodeBuild
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE #NO_ARTIFACTS | CODEPIPELINE |S3
+        Name: MyProject
+      Source:
+        Type: CODEPIPELINE
+      Environment:
+        ComputeType: !Ref CodeBuildComputeType
+        Type: LINUX_CONTAINER
+        Image: !Ref CodeBuildImage
+        PrivilegedMode: true
+
+  #CodeBuild Development Branch
+  CodeBuildDevelopment:
     Type: "AWS::CodeBuild::Project"
     Properties:
       Name: !Sub ${AWS::StackName}-CodeBuild
