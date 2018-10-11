@@ -30,22 +30,14 @@ Parameters:
     Description: "CodeBuild image"
 
   #ECS Fargate Config
-  ProductionCluster:
-    Type: String
-    Default: servercluster
-    Description: "Production ECS cluster name"
-  ProductionService:
-    Type: String
-    Default: serverservice
-    Description: "Production ECS service name"
   DevelopmentCluster:
     Type: String
     Default: servercluster
-    Description: "Development ECS cluster name"
+    Description: "Production ECS cluster name"
   DevelopmentService:
     Type: String
     Default: serverservice
-    Description: "Development ECS service name"
+    Description: "Production ECS service name"
 
 Resources:
   #Store Pipeline Artifacts
@@ -62,19 +54,6 @@ Resources:
       Stages:
         - Name: Source
           Actions:
-            - Name: Master
-              ActionTypeId:
-                Category: Source #Source | Build | Deploy | Test | Invoke | Approval
-                Owner: ThirdParty #AWS | ThirdParty | Custom
-                Provider: GitHub
-                Version: 1
-              OutputArtifacts:
-                - Name: artifactsFromMasterSource
-              Configuration:
-                Owner: !Ref GithubOwner
-                Repo: !Ref GithubRepo
-                Branch: "master"
-                OAuthToken: !Ref GithubOAuthToken
             - Name: Development
               ActionTypeId:
                 Category: Source #Source | Build | Deploy | Test | Invoke | Approval
@@ -90,19 +69,7 @@ Resources:
                 OAuthToken: !Ref GithubOAuthToken
         - Name: Build
           Actions:
-            - Name: Master
-              ActionTypeId:
-                Category: Build
-                Owner: AWS
-                Version: 1
-                Provider: CodeBuild
-              InputArtifacts:
-                - Name: artifactsFromMasterSource
-              OutputArtifacts:
-                - Name: artifactsFromMasterBuild
-              Configuration:
-                ProjectName: !Ref CodeBuildMaster
-            - Name: Development
+            - Name: Build
               ActionTypeId:
                 Category: Build
                 Owner: AWS
@@ -116,19 +83,7 @@ Resources:
                 ProjectName: !Ref CodeBuildDevelopment
         - Name: Deploy
           Actions:
-            - Name: Master
-              ActionTypeId:
-                Category: Deploy
-                Owner: AWS
-                Version: 1
-                Provider: ECS
-              Configuration:
-                ClusterName: !Ref ProductionCluster
-                ServiceName: !Ref ProductionService
-                FileName: imagedefinitions.json
-              InputArtifacts:
-                - Name: artifactsFromMasterBuild
-            - Name: Development
+            - Name: Deploy
               ActionTypeId:
                 Category: Deploy
                 Owner: AWS
@@ -141,23 +96,6 @@ Resources:
               InputArtifacts:
                 - Name: artifactsFromDevelopmentBuild
 
-  #CodeBuild Master Branch
-  CodeBuildMaster:
-    Type: "AWS::CodeBuild::Project"
-    Properties:
-      Name: !Sub ${AWS::StackName}-CodeBuildMaster
-      ServiceRole: !GetAtt CodeBuildRole.Arn
-      Artifacts:
-        Type: CODEPIPELINE #NO_ARTIFACTS | CODEPIPELINE |S3
-        Name: MyProject
-      Source:
-        Type: CODEPIPELINE
-      Environment:
-        ComputeType: !Ref CodeBuildComputeType
-        Type: LINUX_CONTAINER
-        Image: !Ref CodeBuildImage
-        PrivilegedMode: true
-
   #CodeBuild Development Branch
   CodeBuildDevelopment:
     Type: "AWS::CodeBuild::Project"
@@ -169,6 +107,7 @@ Resources:
         Name: MyProject
       Source:
         Type: CODEPIPELINE
+        BuildSpec: buildspec_development.yml
       Environment:
         ComputeType: !Ref CodeBuildComputeType
         Type: LINUX_CONTAINER
