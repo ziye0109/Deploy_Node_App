@@ -5,6 +5,7 @@ Parameters:
     Type: String
     Default: "https://github.com/ziye0109/Deploy_Node_App"
     Description: "Setup node server CI/CD pipeline"
+
   #Github Config
   GithubOwner:
     Type: String
@@ -17,6 +18,7 @@ Parameters:
     Type: String
     Default: 2b858d9ad6dbb18eb1366dc8a2538366857b4a56
     Description: "Ziye personal github access token"
+
   #CodeBuild Config
   CodeBuildComputeType:
     Type: String
@@ -26,15 +28,25 @@ Parameters:
     Type: String
     Default: aws/codebuild/nodejs:10.1.0
     Description: "CodeBuild image"
+
   #ECS Fargate Config
-  Cluster:
+  ProductionCluster:
     Type: String
     Default: servercluster
-    Description: "ECS cluster name"
-  Service:
+    Description: "Production ECS cluster name"
+  ProductionService:
     Type: String
     Default: serverservice
-    Description: "ECS service name"
+    Description: "Production ECS service name"
+  DevelopmentCluster:
+    Type: String
+    Default: servercluster
+    Description: "Development ECS cluster name"
+  DevelopmentService:
+    Type: String
+    Default: serverservice
+    Description: "Development ECS service name"
+
 Resources:
   #Store Pipeline Artifacts
   PipelineBucket:
@@ -50,7 +62,7 @@ Resources:
       Stages:
         - Name: Source
           Actions:
-            - Name: SourceFromMaster
+            - Name: Master
               ActionTypeId:
                 Category: Source #Source | Build | Deploy | Test | Invoke | Approval
                 Owner: ThirdParty #AWS | ThirdParty | Custom
@@ -63,7 +75,7 @@ Resources:
                 Repo: !Ref GithubRepo
                 Branch: "master"
                 OAuthToken: !Ref GithubOAuthToken
-            - Name: SourceFromDevelopment
+            - Name: Development
               ActionTypeId:
                 Category: Source #Source | Build | Deploy | Test | Invoke | Approval
                 Owner: ThirdParty #AWS | ThirdParty | Custom
@@ -78,7 +90,7 @@ Resources:
                 OAuthToken: !Ref GithubOAuthToken
         - Name: Build
           Actions:
-            - Name: BuildMaster
+            - Name: Master
               ActionTypeId:
                 Category: Build
                 Owner: AWS
@@ -90,7 +102,7 @@ Resources:
                 - Name: artifactsFromMasterBuild
               Configuration:
                 ProjectName: !Ref CodeBuildMaster
-            - Name: BuildDevelopment
+            - Name: Development
               ActionTypeId:
                 Category: Build
                 Owner: AWS
@@ -104,18 +116,30 @@ Resources:
                 ProjectName: !Ref CodeBuildDevelopment
         - Name: Deploy
           Actions:
-            - Name: Deploy
+            - Name: Master
               ActionTypeId:
                 Category: Deploy
                 Owner: AWS
                 Version: 1
                 Provider: ECS
               Configuration:
-                ClusterName: !Ref Cluster
-                ServiceName: !Ref Service
+                ClusterName: !Ref ProductionCluster
+                ServiceName: !Ref ProductionService
                 FileName: imagedefinitions.json
               InputArtifacts:
                 - Name: artifactsFromMasterBuild
+            - Name: Development
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Version: 1
+                Provider: ECS
+              Configuration:
+                ClusterName: !Ref DevelopmentCluster
+                ServiceName: !Ref DevelopmentService
+                FileName: imagedefinitions.json
+              InputArtifacts:
+                - Name: artifactsFromDevelopmentBuild
 
   #CodeBuild Master Branch
   CodeBuildMaster:
