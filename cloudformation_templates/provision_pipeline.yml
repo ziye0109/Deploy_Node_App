@@ -121,7 +121,7 @@ Resources:
   CodeBuildMaster:
     Type: "AWS::CodeBuild::Project"
     Properties:
-      Name: !Sub ${AWS::StackName}-CodeBuild
+      Name: !Sub ${AWS::StackName}-CodeBuildMaster
       ServiceRole: !GetAtt CodeBuildRole.Arn
       Artifacts:
         Type: CODEPIPELINE #NO_ARTIFACTS | CODEPIPELINE |S3
@@ -138,7 +138,7 @@ Resources:
   CodeBuildDevelopment:
     Type: "AWS::CodeBuild::Project"
     Properties:
-      Name: !Sub ${AWS::StackName}-CodeBuild
+      Name: !Sub ${AWS::StackName}-CodeBuildDevelopment
       ServiceRole: !GetAtt CodeBuildRole.Arn
       Artifacts:
         Type: CODEPIPELINE #NO_ARTIFACTS | CODEPIPELINE |S3
