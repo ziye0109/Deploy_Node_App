@@ -50,31 +50,56 @@ Resources:
       Stages:
         - Name: Source
           Actions:
-            - Name: SourceAction
+            - Name: SourceFromMaster
               ActionTypeId:
                 Category: Source #Source | Build | Deploy | Test | Invoke | Approval
                 Owner: ThirdParty #AWS | ThirdParty | Custom
                 Provider: GitHub
                 Version: 1
               OutputArtifacts:
-                - Name: artifactsFromSource
+                - Name: artifactsFromMasterSource
               Configuration:
                 Owner: !Ref GithubOwner
                 Repo: !Ref GithubRepo
                 Branch: "master"
                 OAuthToken: !Ref GithubOAuthToken
+            - Name: SourceFromDevelopment
+              ActionTypeId:
+                Category: Source #Source | Build | Deploy | Test | Invoke | Approval
+                Owner: ThirdParty #AWS | ThirdParty | Custom
+                Provider: GitHub
+                Version: 1
+              OutputArtifacts:
+                - Name: artifactsFromDevelopmentSource
+              Configuration:
+                Owner: !Ref GithubOwner
+                Repo: !Ref GithubRepo
+                Branch: "development"
+                OAuthToken: !Ref GithubOAuthToken
         - Name: Build
           Actions:
-            - Name: BuildAction
+            - Name: BuildMaster
               ActionTypeId:
                 Category: Build
                 Owner: AWS
                 Version: 1
                 Provider: CodeBuild
               InputArtifacts:
-                - Name: artifactsFromSource
+                - Name: artifactsFromMasterSource
               OutputArtifacts:
-                - Name: artifactsFromBuild
+                - Name: artifactsFromMasterBuild
+              Configuration:
+                ProjectName: !Ref CodeBuild
+            - Name: BuildDevelopment
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Version: 1
+                Provider: CodeBuild
+              InputArtifacts:
+                - Name: artifactsFromDevelopmentSource
+              OutputArtifacts:
+                - Name: artifactsFromDevelopmentBuild
               Configuration:
                 ProjectName: !Ref CodeBuild
         - Name: Deploy
@@ -90,7 +115,7 @@ Resources:
                 ServiceName: !Ref Service
                 FileName: imagedefinitions.json
               InputArtifacts:
-                - Name: artifactsFromBuild
+                - Name: artifactsFromMasterBuild
   #CodeBuild Resource
   CodeBuild:
     Type: "AWS::CodeBuild::Project"
