@@ -3,7 +3,7 @@
 Deploy node js app by using aws pipeline and aws ecs.
 
 ## Pipeline Architecture
-[![](images/architecture.png)][architecture]
+[![](images/architecture.pdf)][architecture]
 
 ## Getting Started
 
