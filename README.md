@@ -2,6 +2,9 @@
 
 Deploy node js app by using aws pipeline and aws ecs.
 
+## Pipeline Architecture
+[![](images/architecture.png)][architecture]
+
 ## Getting Started
 
 1. Provision pipeline by using provision_pipeline template.
