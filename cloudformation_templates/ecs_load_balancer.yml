@@ -78,9 +78,9 @@ Resources:
               - GroupId
           ToPort: "80"
         - CidrIp: 0.0.0.0/0
-          FromPort: '8081'
+          FromPort: "8081"
           IpProtocol: tcp
-          ToPort: '8081'
+          ToPort: "8081"
       VpcId:
         Ref: VPC
     Type: AWS::EC2::SecurityGroup

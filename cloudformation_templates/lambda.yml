@@ -4,13 +4,14 @@ Parameters:
   #CodeBuild project name
   CodeBuildProjectName:
     Type: String
-    Default: "NodeServerPipeline-CodeBuildDevelopment"
+    Default: CodeBuildDev
     Description: "code build project name"
   #Slack webhook url
   SlackWebhookUrl:
     Type: String
     Default: "https://hooks.slack.com/services/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"
     Description: "Slack webhook"
+
   #Lambda Info
   LambdaRuntime:
     Type: String

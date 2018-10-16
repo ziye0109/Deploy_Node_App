@@ -1,14 +1,23 @@
 AWSTemplateFormatVersion: 2010-09-09
 Parameters:
-  #Cluster for ECS fargate service
+  #ECS Cluster and Service
+  EcrName:
+    Type: String
+    Default: node_app_image
   EcsCluster:
     Type: String
     Default: ecs-dev-cluster
     AllowedValues:
       - ecs-dev-cluster
       - ecs-prod-cluster
+  EcsService:
+    Type: String
+    Default: ecs-dev-service
+    AllowedValues:
+      - ecs-dev-service
+      - ecs-prod-service
 
-  #Containers Info
+  #Container Info
   DesiredCount:
     Type: Number
     Default: 1
@@ -38,7 +47,15 @@ Parameters:
     #Default:
     #  - subnet-04b7b332328962cbc
     #  - subnet-068a104b72b5d7713
+
 Resources:
+
+  #ECS ECR
+  EcrName:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Ref repositoryName
+
   #ECS fargate cluster
   Cluster:
     Type: AWS::ECS::Cluster
@@ -74,6 +91,7 @@ Resources:
   FargateService:
     Type: AWS::ECS::Service
     Properties:
+      ServiceName: !Ref EcsService
       Cluster: !Ref Cluster
       DesiredCount: !Ref DesiredCount
       TaskDefinition: !Ref TaskDefinition
