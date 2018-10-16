@@ -1,10 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Parameters:
-  #Github Source
-  ProjectSource:
-    Type: String
-    Default: "https://github.com/ziye0109/Deploy_Node_App"
-    Description: "Setup node server CI/CD pipeline"
+
   #Github Config
   GithubOwner:
     Type: String
@@ -17,6 +13,7 @@ Parameters:
     Type: String
     Default: 2b858d9ad6dbb18eb1366dc8a2538366857b4a56
     Description: "Ziye personal github access token"
+
   #CodeBuild Config
   CodeBuildComputeType:
     Type: String
@@ -26,19 +23,23 @@ Parameters:
     Type: String
     Default: aws/codebuild/nodejs:10.1.0
     Description: "CodeBuild image"
+
   #ECS Fargate Config
-  Cluster:
+  ProdCluster:
     Type: String
     Default: servercluster
-    Description: "ECS cluster name"
-  Service:
+    Description: "Production ECS cluster name"
+  ProdService:
     Type: String
     Default: serverservice
-    Description: "ECS service name"
+    Description: "Production ECS service name"
+
 Resources:
+
   #Store Pipeline Artifacts
   PipelineBucket:
     Type: "AWS::S3::Bucket"
+
   #Pipeline Resource
   CodePipeline:
     Type: "AWS::CodePipeline::Pipeline"
@@ -50,69 +51,44 @@ Resources:
       Stages:
         - Name: Source
           Actions:
-            - Name: SourceFromMaster
+            - Name: Master
               ActionTypeId:
                 Category: Source #Source | Build | Deploy | Test | Invoke | Approval
                 Owner: ThirdParty #AWS | ThirdParty | Custom
                 Provider: GitHub
                 Version: 1
               OutputArtifacts:
-                - Name: artifactsFromMasterSource
+                - Name: artifactsFromMaster
               Configuration:
                 Owner: !Ref GithubOwner
                 Repo: !Ref GithubRepo
                 Branch: "master"
                 OAuthToken: !Ref GithubOAuthToken
-            - Name: SourceFromDevelopment
-              ActionTypeId:
-                Category: Source #Source | Build | Deploy | Test | Invoke | Approval
-                Owner: ThirdParty #AWS | ThirdParty | Custom
-                Provider: GitHub
-                Version: 1
-              OutputArtifacts:
-                - Name: artifactsFromDevelopmentSource
-              Configuration:
-                Owner: !Ref GithubOwner
-                Repo: !Ref GithubRepo
-                Branch: "development"
-                OAuthToken: !Ref GithubOAuthToken
         - Name: Build
           Actions:
-            - Name: BuildMaster
+            - Name: Master
               ActionTypeId:
                 Category: Build
                 Owner: AWS
                 Version: 1
                 Provider: CodeBuild
               InputArtifacts:
-                - Name: artifactsFromMasterSource
+                - Name: artifactsFromMaster
               OutputArtifacts:
                 - Name: artifactsFromMasterBuild
               Configuration:
                 ProjectName: !Ref CodeBuildMaster
-            - Name: BuildDevelopment
-              ActionTypeId:
-                Category: Build
-                Owner: AWS
-                Version: 1
-                Provider: CodeBuild
-              InputArtifacts:
-                - Name: artifactsFromDevelopmentSource
-              OutputArtifacts:
-                - Name: artifactsFromDevelopmentBuild
-              Configuration:
-                ProjectName: !Ref CodeBuildDevelopment
         - Name: Deploy
           Actions:
-            - Name: Deploy
+            - Name: Master
               ActionTypeId:
                 Category: Deploy
                 Owner: AWS
                 Version: 1
                 Provider: ECS
               Configuration:
-                ClusterName: !Ref Cluster
-                ServiceName: !Ref Service
+                ClusterName: !Ref ProdCluster
+                ServiceName: !Ref ProdService
                 FileName: imagedefinitions.json
               InputArtifacts:
                 - Name: artifactsFromMasterBuild
@@ -125,26 +101,10 @@ Resources:
       ServiceRole: !GetAtt CodeBuildRole.Arn
       Artifacts:
         Type: CODEPIPELINE #NO_ARTIFACTS | CODEPIPELINE |S3
-        Name: MyProject
+        Name: CodeBuildMasterArtifacts
       Source:
         Type: CODEPIPELINE
-      Environment:
-        ComputeType: !Ref CodeBuildComputeType
-        Type: LINUX_CONTAINER
-        Image: !Ref CodeBuildImage
-        PrivilegedMode: true
-
-  #CodeBuild Development Branch
-  CodeBuildDevelopment:
-    Type: "AWS::CodeBuild::Project"
-    Properties:
-      Name: !Sub ${AWS::StackName}-CodeBuildDevelopment
-      ServiceRole: !GetAtt CodeBuildRole.Arn
-      Artifacts:
-        Type: CODEPIPELINE #NO_ARTIFACTS | CODEPIPELINE |S3
-        Name: MyProject
-      Source:
-        Type: CODEPIPELINE
+        BuildSpec: buildspec_master.yml
       Environment:
         ComputeType: !Ref CodeBuildComputeType
         Type: LINUX_CONTAINER

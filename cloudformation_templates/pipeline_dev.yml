@@ -1,0 +1,218 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+
+  #Source: github info
+  GithubOwner:
+    Type: String
+    Default: ziye0109
+  GithubRepo:
+    Type: String
+    Default: Deploy_Node_App
+  GithubOAuthToken:
+    NoEcho: true
+    Type: String
+    Default: 2b858d9ad6dbb18eb1366dc8a2538366857b4a56
+    Description: "Ziye personal github access token"
+
+  #Build: codebuild info
+  CodeBuildComputeType:
+    Type: String
+    Default: BUILD_GENERAL1_SMALL
+    Description: "CodeBuild compute type"
+  CodeBuildImage:
+    Type: String
+    Default: aws/codebuild/nodejs:10.1.0
+    Description: "CodeBuild environment image"
+
+  #Deploy: ecs fargate info
+  DevCluster:
+    Type: String
+    Default: servercluster
+    Description: "Dev ECS cluster name"
+  DevService:
+    Type: String
+    Default: serverservice
+    Description: "Dev ECS service name"
+
+Resources:
+
+  #Store Pipeline Artifacts
+  PipelineBucket:
+    Type: "AWS::S3::Bucket"
+
+  #Pipeline 
+  CodePipeline:
+    Type: "AWS::CodePipeline::Pipeline"
+    Properties:
+      RoleArn: !GetAtt CodePipeLineRole.Arn
+      ArtifactStore:
+        Location: !Ref PipelineBucket
+        Type: S3
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: Development
+              ActionTypeId:
+                Category: Source #Source | Build | Deploy | Test | Invoke | Approval
+                Owner: ThirdParty #AWS | ThirdParty | Custom
+                Provider: GitHub
+                Version: 1
+              OutputArtifacts:
+                - Name: artifactsFromDevSource
+              Configuration:
+                Owner: !Ref GithubOwner
+                Repo: !Ref GithubRepo
+                Branch: "development"
+                OAuthToken: !Ref GithubOAuthToken
+        - Name: Build
+          Actions:
+            - Name: Build
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Version: 1
+                Provider: CodeBuild
+              InputArtifacts:
+                - Name: artifactsFromDevSource
+              OutputArtifacts:
+                - Name: artifactsFromDevBuild
+              Configuration:
+                ProjectName: !Ref CodeBuildDev
+        - Name: Deploy
+          Actions:
+            - Name: Deploy
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Version: 1
+                Provider: ECS
+              Configuration:
+                ClusterName: !Ref DevCluster
+                ServiceName: !Ref DevService
+                FileName: imagedefinitions.json
+              InputArtifacts:
+                - Name: artifactsFromDevBuild
+
+  #CodeBuild Development Branch
+  CodeBuildDev:
+    Type: "AWS::CodeBuild::Project"
+    Properties:
+      Name: !Sub ${AWS::StackName}-CodeBuildDev
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE #NO_ARTIFACTS | CODEPIPELINE |S3
+        Name: CodeBuildDevArtifacts
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: buildspec_development.yml
+      Environment:
+        ComputeType: !Ref CodeBuildComputeType
+        Type: LINUX_CONTAINER
+        Image: !Ref CodeBuildImage
+        PrivilegedMode: true #Allow building an docker image
+
+  #CodePipeline Role
+  CodePipeLineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - "codepipeline.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              #Policy for artifacts
+              - Effect: Allow
+                Action:
+                  - "s3:GetObject"
+                  - "s3:GetObjectVersion"
+                  - "s3:GetBucketVersioning"
+                  - "s3:PutObject"
+                Resource:
+                  - !GetAtt PipelineBucket.Arn
+                  - !Join ["", [!GetAtt PipelineBucket.Arn, "/*"]]
+
+              #Policy for Source
+              - Effect: Allow
+                Action:
+                  - "elasticbeanstalk:*"
+                  - "ec2:*"
+                  - "elasticloadbalancing:*"
+                  - "autoscaling:*"
+                  - "cloudwatch:*"
+                  - "s3:*"
+                  - "sns:*"
+                  - "cloudformation:*"
+                  - "rds:*"
+                  - "sqs:*"
+                  - "ecs:*"
+                  - "iam:PassRole"
+                Resource: "*"
+
+              #Policy for CodeBuild
+              - Effect: Allow
+                Action:
+                  - "codebuild:BatchGetBuilds"
+                  - "codebuild:StartBuild"
+                Resource: "*"
+
+              #Policy for ECS deployment
+              - Effect: Allow
+                Action:
+                  - "ecs:DescribeServices"
+                  - "ecs:DescribeTaskDefinition"
+                  - "ecs:DescribeTasks"
+                  - "ecs:ListTasks"
+                  - "ecs:RegisterTaskDefinition"
+                  - "ecs:UpdateService"
+                Resource: "*"
+
+  #CodeBuild Role
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - "codebuild.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: /service-role/
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "s3:GetObject"
+                  - "s3:GetObjectVersion"
+                  - "s3:GetBucketVersioning"
+                  - "s3:PutObject"
+                Resource:
+                  - !GetAtt PipelineBucket.Arn
+                  - !Join ["", [!GetAtt PipelineBucket.Arn, "/*"]]
+              - Effect: Allow
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                  - "cloudfront:CreateInvalidation"
+                Resource:
+                  - "*"
+              - Effect: Allow
+                Action:
+                  - "ecr:*"
+                Resource:
+                  - "*"

@@ -1,0 +1,32 @@
+version: 0.2
+environment_variables:
+  plaintext:
+    AWS_ACCOUNT_ID: "462109678048"
+    IMAGE_REPO_NAME: "node_app_image"
+
+phases:
+  install:
+    commands:
+      - echo Checking node and docker exist on codebuild.
+      - node --version
+      - docker --version
+  pre_build:
+    commands:
+      - echo login to ECR.
+      - $(aws ecr get-login --no-include-email --region us-east-2)
+      - IMAGE_TAG=$CODEBUILD_BUILD_ID
+      #- IMAGE_URI="462109678048.dkr.ecr.us-east-2.amazonaws.com/node_app_image:latest"
+      - IMAGE_URI="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:latest"
+  build:
+    commands:
+      - echo Build docker image.
+      - npm run docker:build
+      - echo Tag the docker image.
+      - docker tag node_app_image:latest $IMAGE_URI
+  post_build:
+    commands:
+      - echo Push image to ECR.
+      - docker push $IMAGE_URI
+      - printf '[{"name":"nodeservercontainer","imageUri":"%s"}]' "$IMAGE_URI" > imagedefinitions.json
+artifacts:
+  files: imagedefinitions.json

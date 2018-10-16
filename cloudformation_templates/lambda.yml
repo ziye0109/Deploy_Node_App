@@ -1,9 +1,10 @@
 AWSTemplateFormatVersion: 2010-09-09
 Parameters:
+
   #CodeBuild project name
   CodeBuildProjectName:
     Type: String
-    Default: "NodeServerPipeline-CodeBuild"
+    Default: "NodeServerPipeline-CodeBuildDevelopment"
     Description: "code build project name"
   #Slack webhook url
   SlackWebhookUrl:
@@ -23,9 +24,11 @@ Parameters:
     Type: String
     Default: "slack.js.zip"
     Description: "slack_notification.js file name as key"
+
 Resources:
-  # S3 Bucket for Lambda Source Code
-  # Slack Lambda
+
+  #S3 Bucket for Lambda Source Code
+  #Slack Lambda
   SlackLambda:
     Type: AWS::Lambda::Function
     Properties:
@@ -39,7 +42,7 @@ Resources:
         Variables:
           SLACK_HOOK_URL: !Ref SlackWebhookUrl
 
-  # Slack Lambda Role
+  #Slack Lambda Role
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -63,7 +66,7 @@ Resources:
                   - logs:*
                 Resource: arn:aws:logs:*:*:*
 
-  # CloudWatch Event to trigger lambda call
+  #CloudWatch Event to trigger lambda call
   BuildEventRule:
     Type: "AWS::Events::Rule"
     Properties:
@@ -86,7 +89,7 @@ Resources:
         - Arn: !GetAtt SlackLambda.Arn
           Id: "BuildRuleLambdaTarget"
 
-  # Permission for CloudWatch to invoke Lambda
+  #Permission for CloudWatch to invoke Lambda
   PermissionForBuildEventsToInvokeLambda:
     Type: "AWS::Lambda::Permission"
     Properties:
