@@ -48,7 +48,7 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      AvailabilityZone: !Select [ 0, !GetAZs ]
+      #AvailabilityZone: !Select [ 0, !GetAZs ]
       MapPublicIpOnLaunch: true
       CidrBlock: !Ref Subnet1CIDR
       Tags:
@@ -60,13 +60,14 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      AvailabilityZone: !Select [ 1, !GetAZs ]
+      #AvailabilityZone: !Select [ 1, !GetAZs ]
       MapPublicIpOnLaunch: true
       CidrBlock: !Ref Subnet2CIDR
       Tags:
         - Key: Name
           Value: !Sub ${Name} (Public)
 
+  #Route Table
   RouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -75,6 +76,7 @@ Resources:
         - Key: Name
           Value: !Ref Name
 
+  #Route
   DefaultRoute:
     Type: AWS::EC2::Route
     Properties:

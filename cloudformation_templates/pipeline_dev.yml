@@ -27,11 +27,11 @@ Parameters:
   #Deploy: ecs fargate info
   DevCluster:
     Type: String
-    Default: servercluster
+    Default: ecs-dev-cluster
     Description: "Dev ECS cluster name"
   DevService:
     Type: String
-    Default: serverservice
+    Default: ecs-dev-service
     Description: "Dev ECS service name"
 
 Resources:

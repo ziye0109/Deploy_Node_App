@@ -7,10 +7,13 @@ Deploy node js app by using AWS Pipleline and ECS Fargate
 
 ## Getting Started
 
-1. Provision pipeline by using provision_pipeline template.
-2. Provision s3 to store lambda source code.
-2. Provision lambda by using provision_lambda template.
-3. Configure fargate by using provision_fargate template.
+1. Provision vpc if does not exist.
+2. Provision ecs_load_balancer. 
+3. Provision ecs_service.
+4. Provision pipeline_dev.
+5. Provision s3 to store lambda source code.
+6. Provision lambda.
+
 
 ### Prerequisites
 
