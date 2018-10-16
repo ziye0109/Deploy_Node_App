@@ -3,7 +3,7 @@ Parameters:
   #ECS Cluster and Service
   EcrName:
     Type: String
-    Default: node_app_image
+    Default: dev_ode_app_image
   EcsCluster:
     Type: String
     Default: ecs-dev-cluster
@@ -51,10 +51,10 @@ Parameters:
 Resources:
 
   #ECS ECR
-  EcrName:
+  Ecr:
     Type: AWS::ECR::Repository
     Properties:
-      RepositoryName: !Ref repositoryName
+      RepositoryName: !Ref EcrName
 
   #ECS fargate cluster
   Cluster:

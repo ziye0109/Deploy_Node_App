@@ -3,6 +3,7 @@ environment_variables:
   plaintext:
     AWS_ACCOUNT_ID: "462109678048"
     IMAGE_REPO_NAME: "node_app_image"
+    CONTAINER_NAME: "ecs-sync-task"
 
 phases:
   install:
@@ -27,6 +28,6 @@ phases:
     commands:
       - echo Push image to ECR.
       - docker push $IMAGE_URI
-      - printf '[{"name":"nodeservercontainer","imageUri":"%s"}]' "$IMAGE_URI" > imagedefinitions.json
+      - printf '[{"name":"ecs-sync-task","imageUri":"%s"}]' "$IMAGE_URI" > imagedefinitions.json
 artifacts:
   files: imagedefinitions.json
