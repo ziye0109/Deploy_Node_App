@@ -38,5 +38,6 @@ Deploy node js app by using AWS Pipleline and ECS Fargate
 ### Notes
 
 1. VPC Security group need to allow tcp to access contianer app. Custom TCP Rule TCP (6) 8081 0.0.0.0/0
+2. Need a script file to provision all resources.
 
 
