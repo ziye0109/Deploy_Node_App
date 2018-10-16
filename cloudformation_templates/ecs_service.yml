@@ -1,0 +1,114 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  #Cluster for ECS fargate service
+  EcsCluster:
+    Type: String
+    Default: ecs-dev-cluster
+    AllowedValues:
+      - ecs-dev-cluster
+      - ecs-prod-cluster
+
+  #Containers Info
+  DesiredCount:
+    Type: Number
+    Default: 1
+  ImageEcrUrl:
+    Type: String
+    Default: 462109678048.dkr.ecr.us-east-2.amazonaws.com/node_app_image:latest
+  ContainerName:
+    Type: String
+    Default: ecs-sync-task
+  ContainerPort:
+    Type: String
+    Default: 8081
+
+  #Target Group for ALB
+  TargetGroup:
+    Type: String
+    Default: arn:aws:elasticloadbalancing:us-east-2:462109678048:targetgroup/ALBSt-ALBTa-A21UPXGGZLGM/cf310b8ffd85528a
+
+  #Security group for ECS fargate
+  FargateSecurityGroup:
+    Type: AWS::EC2::SecurityGroup::Id
+    Default: sg-0c260d065b5ce9e6c
+
+  #ECS fargate subnets
+  Subnets:
+    Type: List<AWS::EC2::Subnet::Id>
+    #Default:
+    #  - subnet-04b7b332328962cbc
+    #  - subnet-068a104b72b5d7713
+Resources:
+  #ECS fargate cluster
+  Cluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Ref EcsCluster
+
+  #Task Definition: What docker image need to use for the task
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub ${AWS::StackName}-ecs-sync-task
+      RequiresCompatibilities:
+        - FARGATE
+      Memory: 512
+      Cpu: 256
+      NetworkMode: awsvpc
+      ExecutionRoleArn: !Ref TaskExecutionRole
+      ContainerDefinitions:
+        - Name: !Ref ContainerName
+          Image: !Ref ImageEcrUrl
+          Essential: true
+          Memory: 256
+          PortMappings:
+            - ContainerPort: !Ref ContainerPort
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-region: !Ref AWS::Region
+              awslogs-group: !Ref LogGroup
+              awslogs-stream-prefix: !Ref AWS::StackName
+
+  #ECS fargate service: Addition or Deletion for tasks.
+  FargateService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !Ref Cluster
+      DesiredCount: !Ref DesiredCount
+      TaskDefinition: !Ref TaskDefinition
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+            - !Ref FargateSecurityGroup
+          Subnets: !Ref Subnets
+      LoadBalancers:
+        - ContainerName: !Ref ContainerName
+          ContainerPort: !Ref ContainerPort
+          TargetGroupArn: !Ref TargetGroup
+
+  #Task Execution Role
+  TaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /ecs/${AWS::StackName}
+
+Outputs:
+  Service:
+    Value: !Ref FargateService
