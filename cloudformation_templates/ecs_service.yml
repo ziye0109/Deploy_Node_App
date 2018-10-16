@@ -1,10 +1,9 @@
 AWSTemplateFormatVersion: 2010-09-09
 Parameters:
-
   #Cluster for ECS fargate service
-  Cluster:
+  EcsCluster:
     Type: String
-    Defualt: ecs-dev-cluster
+    Default: ecs-dev-cluster
     AllowedValues:
       - ecs-dev-cluster
       - ecs-prod-cluster
@@ -26,20 +25,25 @@ Parameters:
   #Target Group for ALB
   TargetGroup:
     Type: String
+    Default: arn:aws:elasticloadbalancing:us-east-2:462109678048:targetgroup/ALBSt-ALBTa-A21UPXGGZLGM/cf310b8ffd85528a
+
   #Security group for ECS fargate
   FargateSecurityGroup:
     Type: AWS::EC2::SecurityGroup::Id
+    Default: sg-0c260d065b5ce9e6c
+
   #ECS fargate subnets
   Subnets:
     Type: List<AWS::EC2::Subnet::Id>
-
+    #Default:
+    #  - subnet-04b7b332328962cbc
+    #  - subnet-068a104b72b5d7713
 Resources:
-
-  #ECS fargate cluster 
+  #ECS fargate cluster
   Cluster:
     Type: AWS::ECS::Cluster
     Properties:
-      ClusterName: !Ref Cluster
+      ClusterName: !Ref EcsCluster
 
   #Task Definition: What docker image need to use for the task
   TaskDefinition:
@@ -84,7 +88,7 @@ Resources:
         - ContainerName: !Ref ContainerName
           ContainerPort: !Ref ContainerPort
           TargetGroupArn: !Ref TargetGroup
-  
+
   #Task Execution Role
   TaskExecutionRole:
     Type: AWS::IAM::Role
@@ -104,7 +108,6 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub /ecs/${AWS::StackName}
-
 
 Outputs:
   Service:

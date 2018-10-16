@@ -1,7 +1,18 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Parameters:
-Resources:
+  VPC:
+    Type: String
+    Default: vpc-07a9f882d7619368c
 
+  Subnet1:
+    Type: String
+    Default: subnet-04b7b332328962cbc
+
+  Subnet2:
+    Type: String
+    Default: subnet-068a104b72b5d7713
+
+Resources:
   #Load balancer for ecs service
   ALB:
     Properties:
@@ -19,9 +30,9 @@ Resources:
       GroupDescription: ALB Security Group
       SecurityGroupIngress:
         - CidrIp: 0.0.0.0/0
-          FromPort: '80'
+          FromPort: "80"
           IpProtocol: tcp
-          ToPort: '80'
+          ToPort: "80"
       VpcId:
         Ref: VPC
     Type: AWS::EC2::SecurityGroup
@@ -30,44 +41,46 @@ Resources:
   ALBListener:
     Properties:
       DefaultActions:
-        - TargetGroupArn:
-          Ref: ALBTargetGroup
+        - TargetGroupArn: !Ref ALBTargetGroup
           Type: forward
-      LoadBalancerArn:
-        Ref: ALB
-      Port: '80'
+      LoadBalancerArn: !Ref ALB
+      Port: "80"
       Protocol: HTTP
     Type: AWS::ElasticLoadBalancingV2::Listener
 
   #Load balancer target group
   ALBTargetGroup:
     Properties:
-      HealthCheckIntervalSeconds: '30'
+      HealthCheckIntervalSeconds: "30"
       HealthCheckProtocol: HTTP
-      HealthCheckTimeoutSeconds: '10'
-      HealthyThresholdCount: '4'
+      HealthCheckTimeoutSeconds: "10"
+      HealthyThresholdCount: "4"
       Matcher:
-        HttpCode: '200'
+        HttpCode: "200"
       Port: 80
       Protocol: HTTP
       TargetType: ip
-      UnhealthyThresholdCount: '3'
+      UnhealthyThresholdCount: "3"
       VpcId:
         Ref: VPC
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
-  
+
   #FargateSecurityGroup
   FargateSecurityGroup:
     Properties:
       GroupDescription: Task Security Group
       SecurityGroupIngress:
-        - FromPort: '80'
+        - FromPort: "80"
           IpProtocol: tcp
           SourceSecurityGroupId:
             Fn::GetAtt:
               - ALBSecurityGroup
               - GroupId
-          ToPort: '80'
+          ToPort: "80"
+        - CidrIp: 0.0.0.0/0
+          FromPort: '8081'
+          IpProtocol: tcp
+          ToPort: '8081'
       VpcId:
         Ref: VPC
     Type: AWS::EC2::SecurityGroup
@@ -77,8 +90,12 @@ Outputs:
     Description: URL of the ALB
     Value:
       Fn::Join:
-        - ''
+        - ""
         - - http://
           - Fn::GetAtt:
-            - ALB
-            - DNSName
+              - ALB
+              - DNSName
+  ALBTargetGroup:
+    Value: !Ref ALBTargetGroup
+  FargateSecurityGroup:
+    Value: !Ref FargateSecurityGroup

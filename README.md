@@ -1,6 +1,6 @@
 # CI/CD pipeline for node app
 
-Deploy node js app by using aws pipeline and aws ecs.
+Deploy node js app by using AWS Pipleline and ECS Fargate
 
 ## Pipeline Architecture
 ![](images/architecture.png)
@@ -34,6 +34,6 @@ Deploy node js app by using aws pipeline and aws ecs.
 
 ### Notes
 
-1. Security group need to allow tcp to access contianer app.
-2. Yaml format very sensitive.
+1. VPC Security group need to allow tcp to access contianer app. Custom TCP Rule TCP (6) 8081 0.0.0.0/0
+
 

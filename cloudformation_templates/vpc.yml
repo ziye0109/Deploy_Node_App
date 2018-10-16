@@ -5,15 +5,12 @@ Parameters:
 
   Name:
     Type: String
-
   VpcCIDR:
     Type: String
     Default: 10.0.0.0/16
-
   Subnet1CIDR:
     Type: String
     Default: 10.0.0.0/24
-
   Subnet2CIDR:
     Type: String
     Default: 10.0.1.0/24
