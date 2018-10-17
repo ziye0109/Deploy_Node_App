@@ -2,16 +2,10 @@ AWSTemplateFormatVersion: "2010-09-09"
 Parameters:
   VPC:
     Type: String
-    Default: vpc-07a9f882d7619368c
-
   Subnet1:
     Type: String
-    Default: subnet-04b7b332328962cbc
-
   Subnet2:
     Type: String
-    Default: subnet-068a104b72b5d7713
-
 Resources:
   #Load balancer for ecs service
   ALB:
@@ -23,7 +17,6 @@ Resources:
         - Ref: Subnet1
         - Ref: Subnet2
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
-
   #Load balancer security group
   ALBSecurityGroup:
     Properties:
@@ -36,7 +29,6 @@ Resources:
       VpcId:
         Ref: VPC
     Type: AWS::EC2::SecurityGroup
-
   #Load balancer listener
   ALBListener:
     Properties:
@@ -47,7 +39,6 @@ Resources:
       Port: "80"
       Protocol: HTTP
     Type: AWS::ElasticLoadBalancingV2::Listener
-
   #Load balancer target group
   ALBTargetGroup:
     Properties:
@@ -64,9 +55,8 @@ Resources:
       VpcId:
         Ref: VPC
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
-
-  #FargateSecurityGroup
-  FargateSecurityGroup:
+  #Ecs fargate service security group
+  EcsServiceSecurityGroup:
     Properties:
       GroupDescription: Task Security Group
       SecurityGroupIngress:
@@ -84,7 +74,6 @@ Resources:
       VpcId:
         Ref: VPC
     Type: AWS::EC2::SecurityGroup
-
 Outputs:
   ALBURL:
     Description: URL of the ALB
@@ -98,4 +87,4 @@ Outputs:
   ALBTargetGroup:
     Value: !Ref ALBTargetGroup
   FargateSecurityGroup:
-    Value: !Ref FargateSecurityGroup
+    Value: !Ref EcsServiceSecurityGroup

@@ -7,5 +7,7 @@ http.createServer(function (req, res) {
   res.write('Syncing flocs...\n');
   res.write('Syncing maintance plans...\n');
   res.write('Syncing workorders...\n');
+  res.write('Syncing compliance date...\n');
+  res.write('Syncing inspectors...\n');
   res.end(); 
 }).listen(8081); 

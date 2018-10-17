@@ -1,6 +1,6 @@
 # CI/CD pipeline for node app
 
-Deploy node js app by using AWS Pipleline and ECS Fargate
+Deploy node service by using AWS Pipleline and ECS Fargate
 
 ## Pipeline Architecture
 ![](images/architecture.png)
@@ -12,10 +12,10 @@ Deploy node js app by using AWS Pipleline and ECS Fargate
 3. Provision ecs_service.
 4. Provision pipeline_dev.
 5. Provision s3 to store lambda source code.
-6. Provision lambda.
+6. Provision slack notification lambda function.
 
 
-### Prerequisites
+### AWS Resources
 
 1. CloudFormation: Provision all aws resources for CI/CD.
 2. AMI: grant access to resources.
@@ -23,8 +23,8 @@ Deploy node js app by using AWS Pipleline and ECS Fargate
 4. Lambda: Call slack API send message to slack channel.
 5. Pipeline : Orchestrate CI/CD workflow.
 6. Codebuild: Run test and build docker images.
-7. ECR: Upload images into ECR.
-8. ECS: Deploy docker conainter.
+7. ECR: Store docker images into ECR.
+8. ECS Fargate: Deploy docker conainter.
 
 
 ### Parameters need to configure
@@ -33,10 +33,12 @@ Deploy node js app by using AWS Pipleline and ECS Fargate
 1. Github info.
 2. Slack webhook url.
 3. ECR info.
+4. ECS info.
 
 
 ### Notes
 
 1. VPC Security group need to allow tcp to access contianer app. Custom TCP Rule TCP (6) 8081 0.0.0.0/0
+2. Need a script file to provision all resources.
 
 
