@@ -4,7 +4,6 @@ environment_variables:
     AWS_ACCOUNT_ID: "462109678048"
     IMAGE_REPO_NAME: "node_app_image"
     CONTAINER_NAME: "ecs-sync-task"
-
 phases:
   install:
     commands:

@@ -1,6 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
 Parameters:
-
   #CodeBuild project name
   CodeBuildProjectName:
     Type: String
@@ -11,23 +10,20 @@ Parameters:
     Type: String
     Default: "https://hooks.slack.com/services/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"
     Description: "Slack webhook"
-
   #Lambda Info
-  LambdaRuntime:
-    Type: String
-    Default: "nodejs8.10"
-    Description: "Lambda node version"
   LambdaSourceCodeS3Bucket:
     Type: String
     Default: "slack-notification-lambda-bucket"
     Description: "Save lambda in S3, right now use inline"
+  LambdaRuntime:
+    Type: String
+    Default: "nodejs8.10"
+    Description: "Lambda node version"
   LambdaSourceCodeS3Key:
     Type: String
     Default: "slack.js.zip"
     Description: "slack_notification.js file name as key"
-
 Resources:
-
   #S3 Bucket for Lambda Source Code
   #Slack Lambda
   SlackLambda:
@@ -42,7 +38,6 @@ Resources:
       Environment:
         Variables:
           SLACK_HOOK_URL: !Ref SlackWebhookUrl
-
   #Slack Lambda Role
   LambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -66,7 +61,6 @@ Resources:
                 Action:
                   - logs:*
                 Resource: arn:aws:logs:*:*:*
-
   #CloudWatch Event to trigger lambda call
   BuildEventRule:
     Type: "AWS::Events::Rule"
@@ -89,7 +83,6 @@ Resources:
       Targets:
         - Arn: !GetAtt SlackLambda.Arn
           Id: "BuildRuleLambdaTarget"
-
   #Permission for CloudWatch to invoke Lambda
   PermissionForBuildEventsToInvokeLambda:
     Type: "AWS::Lambda::Permission"

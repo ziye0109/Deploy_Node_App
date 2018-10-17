@@ -1,6 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
 Parameters:
-
   #Source: github info
   GithubOwner:
     Type: String
@@ -13,7 +12,6 @@ Parameters:
     Type: String
     Default: 2b858d9ad6dbb18eb1366dc8a2538366857b4a56
     Description: "Ziye personal github access token"
-
   #Build: codebuild info
   CodeBuildComputeType:
     Type: String
@@ -23,7 +21,6 @@ Parameters:
     Type: String
     Default: aws/codebuild/nodejs:10.1.0
     Description: "CodeBuild environment image"
-
   #Deploy: ecs fargate info
   DevCluster:
     Type: String
@@ -33,13 +30,10 @@ Parameters:
     Type: String
     Default: ecs-dev-service
     Description: "Dev ECS service name"
-
 Resources:
-
   #Store Pipeline Artifacts
   PipelineBucket:
     Type: "AWS::S3::Bucket"
-
   #Pipeline 
   CodePipeline:
     Type: "AWS::CodePipeline::Pipeline"
@@ -92,7 +86,6 @@ Resources:
                 FileName: imagedefinitions.json
               InputArtifacts:
                 - Name: artifactsFromDevBuild
-
   #CodeBuild Development Branch
   CodeBuildDev:
     Type: "AWS::CodeBuild::Project"
@@ -110,7 +103,6 @@ Resources:
         Type: LINUX_CONTAINER
         Image: !Ref CodeBuildImage
         PrivilegedMode: true #Allow building an docker image
-
   #CodePipeline Role
   CodePipeLineRole:
     Type: AWS::IAM::Role
@@ -139,7 +131,6 @@ Resources:
                 Resource:
                   - !GetAtt PipelineBucket.Arn
                   - !Join ["", [!GetAtt PipelineBucket.Arn, "/*"]]
-
               #Policy for Source
               - Effect: Allow
                 Action:
@@ -156,14 +147,12 @@ Resources:
                   - "ecs:*"
                   - "iam:PassRole"
                 Resource: "*"
-
               #Policy for CodeBuild
               - Effect: Allow
                 Action:
                   - "codebuild:BatchGetBuilds"
                   - "codebuild:StartBuild"
                 Resource: "*"
-
               #Policy for ECS deployment
               - Effect: Allow
                 Action:
@@ -174,7 +163,6 @@ Resources:
                   - "ecs:RegisterTaskDefinition"
                   - "ecs:UpdateService"
                 Resource: "*"
-
   #CodeBuild Role
   CodeBuildRole:
     Type: AWS::IAM::Role
