@@ -11,5 +11,6 @@ http.createServer(function (req, res) {
   res.write('Syncing logs...\n');
   res.write('Syncing line of businesses...\n');
   res.write('Syncing divisions...\n');
+  res.write('Syncing divisions...\n');
   res.end(); 
 }).listen(8081); 
