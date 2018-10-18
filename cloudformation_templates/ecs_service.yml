@@ -3,7 +3,7 @@ Parameters:
   #ECS Cluster and Service
   EcrName:
     Type: String
-    Default: dev_ode_app_image
+    Default: dev_node_app_image
   EcsCluster:
     Type: String
     Default: ecs-dev-cluster
