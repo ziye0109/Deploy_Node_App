@@ -34,7 +34,7 @@ Resources:
   #Store Pipeline Artifacts
   PipelineBucket:
     Type: "AWS::S3::Bucket"
-  #Pipeline 
+  #Pipeline
   CodePipeline:
     Type: "AWS::CodePipeline::Pipeline"
     Properties:
@@ -45,7 +45,7 @@ Resources:
       Stages:
         - Name: Source
           Actions:
-            - Name: Development
+            - Name: Source
               ActionTypeId:
                 Category: Source #Source | Build | Deploy | Test | Invoke | Approval
                 Owner: ThirdParty #AWS | ThirdParty | Custom
@@ -86,6 +86,20 @@ Resources:
                 FileName: imagedefinitions.json
               InputArtifacts:
                 - Name: artifactsFromDevBuild
+  #Pipeline Webhook
+  Webhook:
+    Type: "AWS::CodePipeline::Webhook"
+    Properties:
+      AuthenticationConfiguration:
+        SecretToken: mygithubwebhooksecret
+      Filters:
+        - JsonPath: "$.ref"
+      Authentication: GITHUB_HMAC
+      TargetPipeline: !Ref CodePipeline
+      TargetAction: Source
+      Name: PipelineWebhook
+      TargetPipelineVersion: !GetAtt CodePipeline.Version
+      RegisterWithThirdParty: "true"
   #CodeBuild Development Branch
   CodeBuildDev:
     Type: "AWS::CodeBuild::Project"

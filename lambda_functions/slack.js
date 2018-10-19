@@ -20,7 +20,7 @@ exports.handler = (event, context, callback) => {
     attachments: [
       {
         color: state.toLowerCase() === "failed" ? "#ff6347" : "#36a64f",
-        pretext: state,
+        pretext: title,
         author_name: "ziye",
         title: title,
         title_link: "https://api.slack.com/",
