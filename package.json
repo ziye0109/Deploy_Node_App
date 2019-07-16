@@ -14,5 +14,14 @@
     "start": "start the node server",
     "docker:build": "build docker images via dockerfile",
     "docker:run": "run docker container"
+  },
+  "dependencies": {
+    "husky": "^3.0.0"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "./pre-commit",
+      "pre-push": "echo \"pre-push hooks\""
+    }
   }
 }

@@ -1,7 +1,3 @@
 #!/bin/bash
 
-COMMIT_TEMPLATE=$(git config commit.template)
-if [ "X$COMMIT_TEMPLATE" != "X.gitmessage" ]; then
-	echo "Updating commit template. (Sorry!)"
-	git config commit.template .gitmessage
-fi
+echo "Would u like to commit the change?"
