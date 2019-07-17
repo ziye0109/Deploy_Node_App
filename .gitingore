@@ -71,3 +71,6 @@ typings/
 
 # Serverless directories
 .serverless
+
+# secret check
+/secret_check/git-secret
