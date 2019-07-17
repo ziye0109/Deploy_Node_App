@@ -1,7 +1,7 @@
 const http = require('http');
 
 const CLIENT_SECRET = '';
-const password = 'Miranda@0109';
+const password1 = 'Miranda@0109';
 const username = 'ziye';
 const SESSION_KEY = '';
 const AUTH_TOKEN = ''
