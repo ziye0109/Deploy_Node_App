@@ -1,6 +1,6 @@
 const http = require('http');
 
-const username = 'ziye';
+const userName = 'ziye';
 const SESSION_KEY = '';
 const AUTH_TOKEN = ''
 const IDENTITY_KEY_PASSPHRASE = '';
