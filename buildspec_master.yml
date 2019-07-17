@@ -1,7 +1,6 @@
 version: 0.2
 environment_variables:
   plaintext:
-    AWS_ACCOUNT_ID: "462109678048"
     IMAGE_REPO_NAME: "node_app_image"
 phases:
   install:

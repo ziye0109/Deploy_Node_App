@@ -29,8 +29,8 @@ PREFIX="/usr/local" make install
 echo "Intall git-secret hooks"
 git secrets --install -f
 
-echo "Add AWS as provider"
-git secrets --add-provider -- git secrets --aws-provider
+echo "Add AWS as provider and register comman patterns for AWS"
+git secrets --register-aws
 
 echo "Add Other prohibited pattern"
 git secrets --add 'ES_AUTH\s*:\s*(.+\s*.*):(.+\s*.*)$'
