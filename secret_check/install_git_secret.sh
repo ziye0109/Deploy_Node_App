@@ -1,5 +1,4 @@
 #!/bin/sh
-
 set -e
 
 echo "Check if git-secrets exist"
@@ -29,7 +28,7 @@ PREFIX="/usr/local" make install
 echo "Intall git-secret hooks"
 git secrets --install -f
 
-echo "Add AWS as provider and register comman patterns for AWS"
+echo "Add AWS as provider and register common patterns for AWS"
 git secrets --register-aws
 
 echo "Add Other prohibited pattern"
@@ -42,6 +41,8 @@ git secrets --add '(username|USERNAME)\s*(:|=)\s*.+'
 git secrets --add 'SESSION_KEY\s*(:|=)\s*.+'
 git secrets --add 'AUTH_TOKEN\s*(:|=)\s*.+'
 git secrets --add 'IDENTITY_KEY_PASSPHRASE\s*(:|=)\s*.+'
+git secrets --add '\s*TOKEN\s*'
+git secrets --add 'API_KEY'
 
 echo "Installation is done"
 
